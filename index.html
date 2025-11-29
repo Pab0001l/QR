@@ -1,0 +1,432 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Galería QR</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            /* Se mantiene tu degradado personalizado */
+            background:linear-gradient(to bottom,#5e5e5e 0%,#903939 5%, #66408e 30%, #903939 80%, #5e5e5e 100%); /* Cambié el gris oscuro (#878787) por blanco suave (#f9f9f9) para que los corazones resalten más */
+            min-height: 100vh;
+        }
+
+        /* Pantalla inicial */
+        #inicio {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #000;
+            color: #fff;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            z-index: 20;
+        }
+
+        #btnEntrar {
+            position: relative;
+            padding: 18px 30px;
+            background: rgba(255, 0, 102, 0.25);
+            color: #fff;
+            border: 2px solid rgba(255, 0, 102, 0.4);
+            border-radius: 25px;
+            font-size: 22px;
+            cursor: pointer;
+            margin-top: 20px;
+            backdrop-filter: blur(18px);
+            box-shadow: 0 0 25px rgba(255, 0, 120, 0.6);
+            overflow: hidden;
+        }
+
+        #btnEntrar::before,
+        #btnEntrar::after {
+            content: "";
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            animation: burbujas 3s infinite ease-in-out;
+            pointer-events: none;
+        }
+        #btnEntrar::before {
+            top: -10px;
+            left: 10px;
+        }
+        #btnEntrar::after {
+            bottom: -10px;
+            right: 15px;
+            animation-delay: 1.3s;
+        }
+
+        @keyframes burbujas {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            50% { transform: translateY(-20px) scale(1.6); opacity: 0.6; }
+            100% { transform: translateY(-45px) scale(0.4); opacity: 0; }
+        }
+
+        /* Corazones al hacer clic */
+        .corazon {
+            position: absolute;
+            color: #ff4d6d;
+            font-size: 25px;
+            animation: subir 2.5s ease-out forwards; 
+            z-index: 21;
+        }
+        @keyframes subir {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-50vh) scale(1.8); opacity: 0; } 
+        }
+        
+        /* Contenedor de la Lluvia */
+        #contenedor-lluvia {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 5; /* Detrás del contenido pero sobre el fondo */
+            display: none; /* Inicialmente oculto */
+        }
+
+        /* Lluvia de Corazones (Caída) */
+        .lluvia-corazon {
+            position: absolute; 
+            top: -50px;
+            color: #ff4d6d;
+            font-size: 20px;
+            opacity: 0.7;
+            animation: caer 8s linear infinite; 
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        @keyframes caer {
+            0% { transform: translateY(0) scale(1); opacity: 0.7; }
+            100% { transform: translateY(100vh) scale(0.5); opacity: 0; } 
+        }
+
+
+        /* Contenido */
+        #contenido {
+            display: none;
+            padding: 20px;
+            z-index: 15;
+            position: relative; 
+        }
+
+        /* Galería */
+        .carousel {
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            max-width: 400px;
+            margin: auto;
+            border-radius: 15px;
+            max-height: 300px;
+        }
+        .slides {
+            display: flex;
+            transition: transform 0.4s ease;
+        }
+        .slides img {
+            width: 100%;
+            height: 100%;
+            flex-shrink: 0;
+            object-fit: cover;
+        }
+        .controles {
+            text-align: center;
+            margin-top: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background: #333;
+            color: white;
+        }
+
+        p {
+            max-width: 500px;
+            margin: 20px auto;
+            font-size: 17px;
+            line-height: 1.4;
+            text-align: center;
+        }
+        
+        /* contenedor de burbujas */
+        #bubbleBox {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            overflow: visible;
+            pointer-events: none;
+            z-index: -1;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .bubble {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.35);
+            border-radius: 50%;
+            filter: blur(2px);
+            animation: rise 3s linear infinite;
+        }
+
+        @keyframes rise {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-200px) scale(1.8); opacity: 0; }
+        }
+        /* --- ESTILO DEL NUEVO CUADRO DE TEXTO --- */
+        #cuadro-adicional {
+            max-width: 400px; 
+            margin: 20px auto 10px auto; 
+            padding: 15px; 
+            
+            background-color: rgba(255, 240, 245, 0.9); 
+            border: 3px double #ff69b4; 
+            border-radius: 15px; 
+            box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3); 
+            
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #4a4a4a;
+        }
+        /* --- NUEVO ESTILO: REPRODUCTOR ESTILIZADO (similar al cuadro) --- */
+        #reproductor-estilizado {
+            max-width: 400px; 
+            margin: 20px auto; 
+            padding: 10px; 
+            
+            background-color: rgba(255, 240, 245, 0.9); 
+            border: 3px double #ff69b4; 
+            border-radius: 15px; 
+            box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3); 
+            
+            text-align: center;
+        }
+
+        #reproductor-estilizado audio {
+            width: 90%; 
+            margin-top: 5px;
+            margin-bottom: 5px;
+        }
+        #reproductor-estilizado p {
+            font-size: 1em;
+            font-weight: bold;
+            color: #ff69b4; 
+            margin: 5px 0 0 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="contenedor-lluvia"></div> 
+    
+    <div id="inicio">
+        <button id="btnEntrar">❤️ ENTRAR</button>
+    </div>
+
+    <div id="contenido">
+        <div id="reproductor-estilizado">
+        <audio controls autoplay loop>
+            <source src="AMOR.mp3" type="audio/mpeg">
+            Tu navegador no soporta el elemento de audio.
+        </audio>
+            <p>❤️</p>
+        </div>
+        <div class="carousel">
+            <div class="slides" id="slides">
+                <img src="F1.jpeg" />
+                <img src="F2.jpeg" />
+                <img src="F3.jpeg" />
+                <img src="F5.jpeg" />
+                <img src="F6.jpeg" />
+                <img src="F7.jpeg" />
+                <img src="F8.jpeg" />
+                </div>
+        </div>
+
+        <div class="controles">
+            <button onclick="anterior()">◀️</button>
+            <button onclick="siguiente()">▶️</button>
+        </div>
+        <div id="cuadro-adicional">
+            11meses,  4 años, 32 días
+        </div>
+
+        <p>
+          <p>Mi querida gordita,</p>
+          <p>Hoy quise escribirte algo distinto,
+          algo que no sean solo palabras,
+          sino un pedacito de lo que siento
+          cada vez que sonríes,
+          cada vez que hablas de tus clases
+          con esa pasión tan tuya
+          que me enamora sin permiso.</p>
+
+          <P>Tú, que enseñas con paciencia,
+          que compartes conocimiento
+          como quien regala luz,
+          eres la flor más bonita
+          de todas las que te gustaría recibir.
+          Y aun así, sigo buscando maneras
+          de regalarte más,
+          de sorprenderte,
+          de hacerte sentir tan especial
+          como realmente eres.</P>
+          <p> 
+          Sé que te encantan las flores,
+          y también la comida rica,
+          las alitas que tanto te gustan
+          y que siempre terminan siendo
+          nuestra excusa favorita
+          para pasar tiempo juntos.
+          Pero más que eso,
+          me encanta que te guste
+          que te diga “gordita”,
+          con ese cariño que solo tú entiendes,
+          porque en esa palabra
+          te digo amor, te digo ternura,
+          te digo “quédate conmigo”.</p>
+
+        <p> Gordita,</p>
+        <p>si pudiera escribirte un poema cada día,
+          lo haría.
+          Si pudiera llenarte de flores todo el año,
+          también lo haría.
+          Y si pudiera elegir de nuevo,
+          igual te eligiera a ti,
+          así, tal cual,
+          con tus manías, tus risas,
+          tu hambre eterna
+          y tu corazón enorme
+          que hace que el mío
+          siempre quiera volver a ti.</p>
+
+          <p>Gracias por ser tú.
+          Gracias por dejarme quererte.
+          Gracias por permitirme sentir
+          que el mundo es más suave
+          cuando estás cerca.</p>
+          
+        <p>Con amor,</P>
+          <p>Pablo Ambuludi 💙</p>
+
+          
+
+          
+        </p>
+    </div>
+
+    <script>
+        // Lógica para crear el contenedor de burbujas dinámicamente
+        const inicio = document.getElementById("inicio");
+        const boton = document.getElementById("btnEntrar");
+        const bubbleBox = document.createElement("div");
+        bubbleBox.id = "bubbleBox";
+        inicio.appendChild(bubbleBox);
+
+        // Lógica de burbujas de fondo (se mantiene intacta)
+        function crearBurbujas() {
+            for (let i = 0; i < 12; i++) {
+                let b = document.createElement("div");
+                b.classList.add("bubble");
+                b.style.left = 80 + (Math.random() * 80 - 40) + "px";
+                b.style.top = 80 + "px";
+                b.style.animationDuration = (2 + Math.random() * 2) + "s";
+                bubbleBox.appendChild(b);
+                setTimeout(() => b.remove(), 3000);
+            }
+        }
+        setInterval(crearBurbujas, 500);
+
+        // FUNCIÓN MODIFICADA: Lanza corazones aleatoriamente por toda la pantalla
+        function lanzarCorazones() {
+            const anchoVentana = window.innerWidth;
+            const altoVentana = window.innerHeight;
+
+            for (let i = 0; i < 15; i++) { 
+                let cor = document.createElement("div");
+                cor.classList.add("corazon");
+                cor.innerHTML = "❤️";
+                
+                cor.style.left = (Math.random() * anchoVentana) + "px";
+                cor.style.top = (Math.random() * altoVentana) + "px";
+
+                cor.style.animationDelay = (Math.random() * 0.5) + "s";
+                
+                inicio.appendChild(cor);
+                setTimeout(() => cor.remove(), 2500); 
+            }
+        }
+
+        // 🚨 NUEVA FUNCIÓN: INICIA LA LLUVIA DE CORAZONES 🚨
+        const contenedorLluvia = document.getElementById("contenedor-lluvia"); // Ahora sí encontrará el elemento
+        function crearCorazonLluvia() {
+            let cor = document.createElement("div");
+            cor.classList.add("lluvia-corazon");
+            cor.innerHTML = "❤️";
+            
+            cor.style.left = (Math.random() * window.innerWidth) + "px";
+            cor.style.animationDuration = (6 + Math.random() * 5) + "s";
+            cor.style.animationDelay = (Math.random() * 5) + "s";
+            
+            contenedorLluvia.appendChild(cor);
+            setTimeout(() => cor.remove(), 8000); 
+        }
+
+        function iniciarLluvia() {
+            if (contenedorLluvia) { // Pequeña verificación para mayor seguridad
+                contenedorLluvia.style.display = "block";
+                setInterval(crearCorazonLluvia, 200); 
+            }
+        }
+
+        // Lógica del botón de entrada
+        boton.addEventListener("click", () => {
+            lanzarCorazones(); 
+            
+            setTimeout(() => {
+                inicio.style.display = "none";
+                document.getElementById("contenido").style.display = "block";
+                iniciarLluvia(); // INICIA LA LLUVIA AQUÍ
+            }, 500);
+        });
+        
+        // Lógica del Carrusel
+        let index = 0;
+        const totalSlides = document.getElementById("slides").children.length; 
+        
+        function actualizar() {
+            const slides = document.getElementById("slides");
+            slides.style.transform = `translateX(-${index * 100}%)`;
+        }
+
+        function siguiente() {
+            index = (index + 1) % totalSlides;
+            actualizar();
+        }
+
+        function anterior() {
+            index = (index - 1 + totalSlides) % totalSlides;
+            actualizar();
+        }
+    </script>
+</body>
+</html>
